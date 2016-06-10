@@ -32,16 +32,18 @@ import java.io.IOException;
 
 public class Run extends AnAction {
 
+    String id;
     StatusBar statusBar;
     Balloon statusBaloon;
 
     public Run() {
 	super("_Run");
+	id = "Haxe Checkstyle";
     }
 
     private void createStatusBaloon(Project project) {
 	statusBar = WindowManager.getInstance().getStatusBar(project);
-	statusBaloon = JBPopupFactory.getInstance().createHtmlTextBalloonBuilder("Running Haxe Checkstyle", MessageType.INFO, null).setFadeoutTime(1000).createBalloon();
+	statusBaloon = JBPopupFactory.getInstance().createHtmlTextBalloonBuilder("Running " + id, MessageType.INFO, null).setFadeoutTime(1000).createBalloon();
     }
 
     private void showBaloon() {
@@ -57,7 +59,7 @@ public class Run extends AnAction {
 	    public void run() {
 		try {
 		    Runtime rt = Runtime.getRuntime();
-		    Process pr = rt.exec("haxelib run checkstyle -s " + project.getBasePath() + "/src -r xml -p " + project.getBasePath() + "/checkstyle-report.xml -c " + project.getBasePath() + "/checkstyle.json");
+		    Process pr = rt.exec("haxelib run checkstyle -s " + project.getBasePath() + "/src -r xml -p " + project.getBasePath() + "/.idea/checkstyle-report.xml -c " + project.getBasePath() + "/checkstyle.json");
 
 		    try {
 			pr.waitFor();
@@ -96,7 +98,7 @@ public class Run extends AnAction {
 		    int issueCount = 0;
 
 		    try {
-			File issuesXml = new File(project.getBasePath() + "/checkstyle-report.xml");
+			File issuesXml = new File(project.getBasePath() + "/.idea/checkstyle-report.xml");
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 			Document doc = dBuilder.parse(issuesXml);
@@ -131,7 +133,7 @@ public class Run extends AnAction {
 		    }
 
 		    if (issueCount == 0) {
-			Messages.showMessageDialog(project, "No issues found.", "Haxe Checkstyle", Messages.getInformationIcon());
+			Messages.showMessageDialog(project, "No issues found.", id, Messages.getInformationIcon());
 		    } else {
 			window.getComponent().getParent().add(content);
 			window.show(null);
@@ -153,8 +155,8 @@ public class Run extends AnAction {
 	showBaloon();
 
 	ToolWindowManager toolWindowManager = ToolWindowManager.getInstance(project);
-	toolWindowManager.unregisterToolWindow("Haxe Checkstyle");
-	ToolWindow window = toolWindowManager.registerToolWindow("Haxe Checkstyle", false, ToolWindowAnchor.BOTTOM, project, true);
+	toolWindowManager.unregisterToolWindow(id);
+	ToolWindow window = toolWindowManager.registerToolWindow(id, false, ToolWindowAnchor.BOTTOM, project, true);
 	runCheckstyle(project, window);
     }
 }
