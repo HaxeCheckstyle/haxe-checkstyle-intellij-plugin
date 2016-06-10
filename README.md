@@ -1,2 +1,2 @@
-# intellij-plugin
+# IntelliJ Plugin
 Plugin for IntelliJ IDEA
