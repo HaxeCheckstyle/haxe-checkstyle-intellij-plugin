@@ -6,7 +6,9 @@ import com.intellij.openapi.actionSystem.PlatformDataKeys;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 public class Install extends AnAction {
 
@@ -15,26 +17,31 @@ public class Install extends AnAction {
     }
 
     public void actionPerformed(AnActionEvent event) {
+	Project project = event.getData(PlatformDataKeys.PROJECT);
+
 	try {
-	    Runtime rt = Runtime.getRuntime();
-	    Process pr = rt.exec("haxelib install checkstyle");
-	    try {
-		pr.waitFor();
-	    } catch (InterruptedException e) {
-		System.out.print(e);
+	    Process pr = Runtime.getRuntime().exec("haxelib install checkstyle");
+	    pr.waitFor();
+
+	    StringBuffer output = new StringBuffer();
+	    BufferedReader reader = new BufferedReader(new InputStreamReader(pr.getInputStream()));
+
+	    String line = "";
+	    String l = "";
+	    int i = 0;
+	    while ((line = reader.readLine()) != null) {
+		if (i == 0) output.append(line + "\n");
+		i++;
+		l = line;
 	    }
+	    if (i > 1 && l != null) output.append(l);
 
-	    Project project = event.getData(PlatformDataKeys.PROJECT);
+	    Messages.showMessageDialog(project, output.toString(), "Haxe Checkstyle (haxelib)", Messages.getInformationIcon());
 
-	    Integer exitValue = pr.exitValue();
-
-	    if (exitValue == 0) {
-		Messages.showMessageDialog(project, "Library successfully installed.", "Haxe Checkstyle", Messages.getInformationIcon());
-	    } else {
-		Messages.showMessageDialog(project, "Library installation failed.", "Haxe Checkstyle", Messages.getErrorIcon());
-	    }
 	} catch (IOException e) {
-	    System.out.print(e);
+	    Messages.showMessageDialog(project, e.getMessage(), "Haxe Checkstyle (haxelib)", Messages.getErrorIcon());
+	} catch (InterruptedException e) {
+	    Messages.showMessageDialog(project, e.getMessage(), "Haxe Checkstyle (haxelib)", Messages.getErrorIcon());
 	}
     }
 }
