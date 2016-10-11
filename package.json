@@ -1,0 +1,26 @@
+{
+    "name": "haxe-checkstyle-intellij-plugin",
+    "version": "1.0.0",
+    "description": "haxe-checkstyle-intellij-plugin",
+    "scripts": {
+	"test": "echo \"no test specified\" && exit 0"
+    },
+    "repository": {
+	"type": "git",
+	"url": "https://github.com/HaxeCheckstyle/haxe-checkstyle-intellij-plugin"
+    },
+    "bugs": {
+	"url": "https://github.com/HaxeCheckstyle/haxe-checkstyle-intellij-plugin/issues"
+    },
+    "author": {
+	"name": "Adi Reddy Mora",
+	"email": "adiinteractive@gmail.com"
+    },
+    "dependencies": {},
+    "license": "MIT",
+    "devDependencies": {
+	"grunt-shell": "^1.1.2",
+	"grunt-zip": "latest",
+	"grunt-contrib-clean": "latest"
+    }
+}

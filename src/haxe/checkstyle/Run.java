@@ -1,16 +1,21 @@
 package haxe.checkstyle;
 
+import com.intellij.ide.plugins.IdeaPluginDescriptor;
+import com.intellij.ide.plugins.PluginManager;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
+import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.MessageType;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.popup.Balloon;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.util.IconLoader;
 import com.intellij.openapi.wm.*;
 import com.intellij.ui.awt.RelativePoint;
 import com.intellij.ui.components.JBScrollPane;
@@ -43,28 +48,37 @@ public class Run extends AnAction {
 
     private void createStatusBaloon(Project project) {
 	statusBar = WindowManager.getInstance().getStatusBar(project);
-	statusBaloon = JBPopupFactory.getInstance().createHtmlTextBalloonBuilder("Running " + id, MessageType.INFO, null).setFadeoutTime(1000).createBalloon();
-    }
-
-    private void showBaloon() {
-	statusBaloon.show(RelativePoint.getCenterOf(statusBar.getComponent()), Balloon.Position.atRight);
-    }
-
-    private void hideBaloon() {
-	statusBaloon.hide();
+	statusBaloon = JBPopupFactory.getInstance().createHtmlTextBalloonBuilder("Running " + id, MessageType.INFO, null).createBalloon();
     }
 
     private void runCheckstyle(Project project, ToolWindow window) {
-	/*Runnable r = new Runnable() {
-	    public void run() {
-
-	    }
-	};
-	new Thread(r).start();*/
-
 	try {
+	    PluginId runtimePluginId = PluginManager.getPluginByClassName("haxe.checkstyle.Config");
+	    IdeaPluginDescriptor runtimePlugin = PluginManager.getPlugin(runtimePluginId);
+
+	    projectPath = projectPath.replace(" ", "\\ ");
+
+	    File run = new File(runtimePlugin.getPath().getAbsolutePath(), "/classes/run");
+	    File toRun = new File(projectPath + "/.idea/", "run");
+
+	    FileUtil.copy(run, toRun);
+	    String command = projectPath + "/.idea/run";
+
+	    String srcFoldersInput = Messages.showInputDialog("Enter source folders (comma separated):", "Haxe Checkstyle", null, "src", null);
+	    String[] srcFolders = srcFoldersInput.split(",");
+
+	    for (int i = 0; i < srcFolders.length; i++){
+		command += " -s " + projectPath + "/" + srcFolders[i];
+	    }
+	    command += " -r xml -p " + projectPath + "/.idea/checkstyle-report.xml";
+
+	    File config = new File(projectPath, "checkstyle.json");
+	    if (config.exists()) {
+		command +=  " -c " + projectPath + "/checkstyle.json";
+	    }
+
 	    Runtime rt = Runtime.getRuntime();
-	    Process pr = rt.exec("haxelib run checkstyle -s " + projectPath + "/src -r xml -p " + projectPath + "/.idea/checkstyle-report.xml -c " + projectPath + "/checkstyle.json");
+	    Process pr = rt.exec(command);
 
 	    try {
 		pr.waitFor();
@@ -142,13 +156,13 @@ public class Run extends AnAction {
 
 	    if (issueCount == 0) {
 		Messages.showMessageDialog(project, "No issues found.", id, Messages.getInformationIcon());
+		window.hide(null);
 	    } else {
+		if (issueCount == 1) Messages.showInfoMessage(issueCount + " issue found.", "Haxe Checkstyle");
+		else Messages.showInfoMessage(issueCount + " issues found.", "Haxe Checkstyle");
+	    	window.activate(null, false);
 		window.getComponent().getParent().add(content);
-		if (window != null) {
-		    window.activate(null, false);
-		}
 	    }
-	    hideBaloon();
 
 	} catch (IOException e) {
 	}
@@ -158,11 +172,11 @@ public class Run extends AnAction {
 	Project project = event.getData(PlatformDataKeys.PROJECT);
 	projectPath = project.getBasePath();
 	createStatusBaloon(project);
-	showBaloon();
 
 	ToolWindowManager toolWindowManager = ToolWindowManager.getInstance(project);
 	toolWindowManager.unregisterToolWindow(id);
 	ToolWindow window = toolWindowManager.registerToolWindow(id, false, ToolWindowAnchor.BOTTOM, project, true);
+	window.setIcon(IconLoader.getIcon("icons/haxelib.png"));
 	runCheckstyle(project, window);
     }
 }
