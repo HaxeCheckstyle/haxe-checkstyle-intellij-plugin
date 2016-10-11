@@ -5,7 +5,7 @@ Plugin for IntelliJ IDEA
 
 ### Known Issues:
 
-On mac, if you can't run it in intelliJ try the following command in Terminal Window and try again.
+On mac, if you can't run it in intelliJ try the following command in Terminal Window run again.
 
 `sudo chmod 755 .idea/run`
 
